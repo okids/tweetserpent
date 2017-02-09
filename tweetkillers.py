@@ -1,7 +1,10 @@
+#!/usr/bin/env python
 import tweepy
 from tweepy import OAuthHandler
 from tweepy import Stream
 from tweepy.streaming import StreamListener
+from pymongo import MongoClient
+import json
 
 consumer_key = 'Qcgiz9RGTzoDGIE9xXp7I8g50'
 consumer_secret = 'O9GAbvEB2sTpsWHQdqgckNHaH7kkYySZJFVUtQ0ivJZ3uJ3fPG'
@@ -13,17 +16,23 @@ auth.set_access_token(access_token, access_secret)
 
 api = tweepy.API(auth)
 
+c = MongoClient('localhost')
+db = c['ts']
+
 class StdOutListener(StreamListener):
 
     data = []
     errorStats = []
 
     def on_data(self, data):
+        j = json.loads(data)
+        u = j['user']
         try:
-            print(data)
-            with open('python.json', 'a') as f:
-                f.write(data)
-                return True
+            db.tweet.insert(
+                {'text': (j['text']), '_id': u['id'], 'name': u['name'], 'created_at': j['created_at'],
+                             'user_join': u['created_at'], 'tweet_id':j['id']}
+            )
+            return True
         except BaseException as e:
             print("error on data")
             return True
@@ -35,5 +44,5 @@ class StdOutListener(StreamListener):
 
 l = StdOutListener()
 stream = Stream(auth,l)
-stream.filter(track=['#tangkapAhok'])
+stream.filter(track=['ahok'])
 
