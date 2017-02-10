@@ -18,7 +18,7 @@ api = tweepy.API(auth)
 
 c = MongoClient('localhost')
 db = c['ts']
-
+BRAND_OBJECT = 'AHOK'
 class StdOutListener(StreamListener):
 
     data = []
@@ -30,7 +30,7 @@ class StdOutListener(StreamListener):
             u = j['user']
             db.tweet.insert(
                 {'_id': (j['text']), 'user_id': u['id'], 'name': u['name'], 'created_at': j['created_at'],
-                             'user_join': u['created_at'], 'tweet_id':j['id']}
+                             'user_join': u['created_at'], 'tweet_id':j['id'],'object':BRAND_OBJECT}
             )
             return True
         except BaseException as e:
