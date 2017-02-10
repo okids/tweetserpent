@@ -26,15 +26,15 @@ class StdOutListener(StreamListener):
 
     def on_data(self, data):
         j = json.loads(data)
-        u = j['user']
         try:
+            u = j['user']
             db.tweet.insert(
-                {'text': (j['text']), '_id': u['id'], 'name': u['name'], 'created_at': j['created_at'],
+                {'_id': (j['text']), 'user_id': u['id'], 'name': u['name'], 'created_at': j['created_at'],
                              'user_join': u['created_at'], 'tweet_id':j['id']}
             )
             return True
         except BaseException as e:
-            print("error on data")
+            print(e)
             return True
 
 
@@ -44,5 +44,5 @@ class StdOutListener(StreamListener):
 
 l = StdOutListener()
 stream = Stream(auth,l)
-stream.filter(track=['ahok'])
+stream.filter(track=['ahok','ahok djarot', 'djarot'])
 
