@@ -1,5 +1,6 @@
 import pandas as pd
 import re
+import pickle
 
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.svm import LinearSVC
@@ -40,3 +41,9 @@ model = LinearSVC()
 model_fit = model.fit(train_data_features, y_train)
 result = model.predict(x_test)
 print(accuracy_score(result, y_test))
+
+filename = 'model_ahok.sav'
+pickle.dump(model, open(filename, 'wb'))
+
+#load
+#loaded_model = pickle.load(open(filename, 'rb'))
