@@ -1,13 +1,44 @@
 import pandas as pd
 import re
 import pickle
+import os
+import json
+import matplotlib.pyplot as plt
 
+from wordcloud import WordCloud
+from sklearn.decomposition import LatentDirichletAllocation, NMF
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.svm import LinearSVC
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.cross_validation import train_test_split
 from sklearn.metrics import accuracy_score
 
+
+def print_topic(model, feature_names, n_top_word):
+    topics = []
+    for topic_idx, topic in enumerate(model.components_):
+        topic_dict = [{"keyword": feature_names[i], "score": topic[i]}
+                      for i in topic.argsort()[:-n_top_word - 1:-1]]
+        topic_dict.sort(key=lambda x: x.get("score"), reverse=True)
+        topics.append(topic_dict)
+
+    file_name = 'Topic.json'
+    json_output_dir = os.path.join(os.getcwd(), file_name)
+    with open(json_output_dir, 'w') as f:
+        json.dump(topics, f)
+    return topics
+
+
+def print_top_words(data, n_top_words=20):
+    for topic_idx, topic in enumerate(data):
+        plt.figure()
+        plt.imshow(WordCloud().fit_words(
+            [(i["keyword"], i["score"])
+             for i in topic[:-n_top_words - 1:-1]]
+        ))
+        plt.axis("off")
+        plt.title("Topic #%d" % (topic_idx + 1))
+        plt.savefig("Topic_" + str(topic_idx + 1) + ".png")
+    print()
 
 stops = stop_words = [line.strip() for line in open("indonesia.txt")]
 train = pd.read_csv(
@@ -47,3 +78,11 @@ pickle.dump(model, open(filename, 'wb'))
 
 #load
 #loaded_model = pickle.load(open(filename, 'rb'))
+
+print("Fitting LDA models with tf ")
+lda_array = nmf = NMF(n_components=10)
+lda_array.fit(train_data_features)
+
+tfidf_feature_names = vectorizer.get_feature_names()
+topics = print_topic(lda_array, tfidf_feature_names, 200)
+print_top_words(topics, 200)
