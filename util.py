@@ -54,9 +54,56 @@ def wordcount(tweet,word):
         return 0
 
 def create_sql_connection():
-    return pymysql.connect(host='davidhutasoit.mysql.pythonanywhere-services.com',
-                                 user='davidhutasoit',
+    return pymysql.connect(host='localhost',
                                  db='tweet_engine',
                                  charset='utf8mb4',
-                                 password='datascience2016',
                                  cursorclass=pymysql.cursors.DictCursor)
+
+def insert_to_word_counter(tweet):
+    list_of_words = ['anies','sandi','ahok','djarot']
+    for word in list_of_words:
+        if word in tweet.lower():
+            QUERY ="""
+            UPDATE word_counter
+            SET counter = counter + 1
+            WHERE word = '{}'
+            """.format(word)
+            con = create_sql_connection()
+            cursor = con.cursor()
+            cursor.execute(QUERY)
+            con.commit()
+            con.close()
+
+def insert_to_sentimen_counter(result):
+    Counter = None
+    if result.count('ahok') is 1:
+        OBJECT = 'Ahok'
+        SENTIMEN = result.split(sep='ahok')[1]
+        if SENTIMEN is '+':
+            Counter = 'POSITIVE_COUNTER'
+        elif SENTIMEN is '-':
+            Counter = 'NEGATIVE_COUNTER'
+        else:
+            Counter = 'NEUTRAL_COUNTER'
+
+    elif result.count('anies') is 1:
+        OBJECT = 'Anies'
+        SENTIMEN = result.split(sep='anies')[1]
+        if SENTIMEN is '+':
+            Counter = 'POSITIVE_COUNTER'
+        elif SENTIMEN is '-':
+            Counter = 'NEGATIVE_COUNTER'
+        else:
+            Counter = 'NEUTRAL_COUNTER'
+
+    if Counter is not None:
+        QUERY = """
+        UPDATE SENTIMENT_COUNTER
+        SET {} = {} + 1
+        WHERE OBJECT = '{}'
+        """.format(Counter, Counter, OBJECT)
+        con = create_sql_connection()
+        cursor = con.cursor()
+        cursor.execute(QUERY)
+        con.commit()
+        con.close()

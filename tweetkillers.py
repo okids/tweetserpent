@@ -3,7 +3,7 @@ import tweepy
 from tweepy import OAuthHandler
 from tweepy import Stream
 from tweepy.streaming import StreamListener
-from util import create_csv_header, append_to_csv, clean_tweet
+from util import create_csv_header, append_to_csv, clean_tweet, insert_to_sentimen_counter, insert_to_word_counter
 from predictor import predictor
 import logging
 import json
@@ -47,6 +47,8 @@ class StdOutListener(StreamListener):
                 'coordinates':j['coordinates']
             }
             append_to_csv(BRAND_OBJECT,out)
+            insert_to_sentimen_counter(p_res)
+            insert_to_word_counter(j['text'])
 
 
         except BaseException as e:
