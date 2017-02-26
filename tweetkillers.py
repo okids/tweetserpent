@@ -3,9 +3,12 @@ import tweepy
 from tweepy import OAuthHandler
 from tweepy import Stream
 from tweepy.streaming import StreamListener
-from pymongo import MongoClient
+from util import create_csv_header, append_to_csv, clean_tweet
+from predictor import predictor
+import logging
 import json
 
+logging.basicConfig(filename='log/tweepy.log',level=logging.DEBUG)
 consumer_key = 'Qcgiz9RGTzoDGIE9xXp7I8g50'
 consumer_secret = 'O9GAbvEB2sTpsWHQdqgckNHaH7kkYySZJFVUtQ0ivJZ3uJ3fPG'
 access_token = '800349403894595584-CPaavTex9Mx15uw2KyZxlP6l3Y6HPOL'
@@ -15,10 +18,12 @@ auth = OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_secret)
 
 api = tweepy.API(auth)
+BRAND_OBJECT = 'PILKADA'
 
-c = MongoClient('localhost')
-db = c['ts']
-BRAND_OBJECT = 'AHOK'
+create_csv_header(BRAND_OBJECT)
+p = predictor()
+p.load_model()
+
 class StdOutListener(StreamListener):
 
     data = []
@@ -28,15 +33,25 @@ class StdOutListener(StreamListener):
         j = json.loads(data)
         try:
             u = j['user']
-            db.tweet.insert(
-                {'_id': (j['text']), 'user_id': u['id'], 'name': u['name'], 'created_at': j['created_at'],
-                             'user_join': u['created_at'], 'tweet_id':j['id'],'object':BRAND_OBJECT}
-            )
-            return True
+            p_res = p.predict(clean_tweet(j['text']))
+            out = {
+                '_id': (j['text']),
+                'user_id': u['id'],
+                'name': u['name'],
+                'created_at': j['created_at'],
+                'user_join': u['created_at'],
+                'tweet_id': j['id'],
+                'object': BRAND_OBJECT,
+                'geo':j['geo'],
+                'sentimen_result':p_res,
+                'coordinates':j['coordinates']
+            }
+            append_to_csv(BRAND_OBJECT,out)
+
+
         except BaseException as e:
             print(e)
             return True
-
 
     def on_error(self, status):
         print(status)
@@ -44,5 +59,5 @@ class StdOutListener(StreamListener):
 
 l = StdOutListener()
 stream = Stream(auth,l)
-stream.filter(track=['ahok','ahok djarot', 'djarot'])
+stream.filter(track=['ahok','anies','sandi','djarot'])
 
